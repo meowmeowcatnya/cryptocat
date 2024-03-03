@@ -57,6 +57,6 @@ if saveToFile:
     print("Writing encrypted Data to", location)
     file = open(location, "w")
     file.write(encrypted)
-    file.close()
+    file.close() 
 else:    
     print(encrypted)
