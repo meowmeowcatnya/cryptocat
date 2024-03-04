@@ -6,7 +6,7 @@ import pathlib
 def caesar(inputString: str, key: int) -> str:
     return "CEASAR"
 
-parser = argparse.ArgumentParser(prog="cryptocat", description="A simple unsafe encryption program", epilog=":3")
+parser = argparse.ArgumentParser(prog="cryptocat", description="A simple unsafe encryption program")
 parser.add_argument("-d", "--data", help="Data to be encrypted")
 parser.add_argument("-m", "--method", choices=range(3), type=int, required=True, help="Encryption method. 0-Caesar")
 parser.add_argument("-k", "--key", type=int, help="Encryption Key to be used. Will be created randomly if not specified. Depending on the encryption method different keys are accepted.")
