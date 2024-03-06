@@ -36,7 +36,7 @@ impl<T: Field> EllipticCurveType1 <T>{
         let ax = self.a.mul(&p.x);
         let x3 = p.x.pow(3);
         let z = ax.add(&x3).add(&self.b);
-        return T::equals(p.y.pow(2), &z);
+        return T::equals(&p.y.pow(2), &z);
     }
 }
 
