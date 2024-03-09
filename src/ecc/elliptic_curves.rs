@@ -45,7 +45,14 @@ impl<T: Field + Eq> EllipticCurveType1 <T> {
         }
     }
 
-    fn add_point(self, p1: Point<T>, p2: Point<T>) -> Point<T> {
+    fn invert_point(self, p: Point<T>) -> Point<T> {
+        match p {
+            Point::PointAtInfinity => Point::PointAtInfinity,
+            Point::Point { x, y } => Point::Point { x: x, y: T::inv_add(&y) },
+        }
+    }
+
+    fn add_points(self, p1: Point<T>, p2: Point<T>) -> Point<T> {
         //neutral rule
         match p1 {
             Point::PointAtInfinity => p2,
@@ -128,6 +135,46 @@ impl<T:Field> EllipticCurveType2NS<T>{
             }
         }
     }
+
+    fn invert_point(self, p: Point<T>) -> Point<T> {
+        match p {
+            Point::PointAtInfinity => Point::PointAtInfinity,
+            Point::Point { x, y } => Point::Point { x: x, y: x+y },
+        }
+    }
+
+    fn add_points(self, p1: Point<T>, p2: Point<T>) -> Point<T> {
+        // neutral rule
+        match p1 {
+            Point::PointAtInfinity => p2, 
+            Point::Point { x, y } => {
+                let x1 = x;
+                let y1 = y;
+                match p2 {
+                    Point::PointAtInfinity => p1,
+                    Point::Point { x, y } => {
+                        // inverse rule
+                        if x == x1 && y == x1 + y1 {Point::PointAtInfinity} 
+                        else if x == x1 && y1 == y {
+                            // double rule
+                            let l = x1 + y1 * T::inv_mul(&x1);
+                            let x3 = l * l + l + self.a;
+                            let y3 = x1 * x1 + l * x3 + x3;
+                            Point::Point { x: x3, y: y3 } 
+                        } else {
+                            //addition rule
+                            let num = y1 + y;
+                            let den = x1 + x;
+                            let l = num * T::inv_mul(&den);
+                            let x3 = l * l + l + x1 + x + self.a;
+                            let y3 = l * (x1 + x3) +x3 + y1;
+                            Point::Point { x: x3, y: y3 } 
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 struct EllipticCurveType2S<T: Field> {
@@ -160,6 +207,54 @@ impl<T:Field> EllipticCurveType2S<T> {
             let ax: T = self.a * x;
             let rhs = x3 + ax + self.b;
             lhs == rhs
+            }
+        }
+    }
+
+    fn invert_point(self, p: Point<T>) -> Point<T> {
+        match p {
+            Point::PointAtInfinity => Point::PointAtInfinity,
+            Point::Point { x, y } => Point::Point { x: x, y: y+self.c },
+        }
+    }
+
+    fn add_points(self, p1: Point<T>, p2: Point<T>) -> Point<T> {
+        //neutral rule 
+        match p1 {
+            Point::PointAtInfinity => Point::PointAtInfinity,
+            Point::Point { x, y } => {
+                let x1 = x;
+                let y1 = y;
+                match p2 {
+                    Point::PointAtInfinity => Point::PointAtInfinity,
+                    Point::Point { x, y } => {
+                        //inverse rule
+                        if x == x1 && y == y1 + self.c {Point::PointAtInfinity} 
+                        else if x == x1 && y == y1 {
+                            // double rule
+                            let num = x1 * x1 + self.a;
+                            let frac = num * T::inv_mul(&self.c);
+                            let x3 = frac * frac;
+
+                            let prod = frac * (x1 + x3);
+                            let y3 = prod + y1 + self.c;
+                            
+                            Point::Point { x: x3, y: y3 }
+                        } else {
+                            // addition rule
+                            let num = y1 + y;
+                            let den = x1 + x;
+                            let frac = num * T::inv_mul(&den);
+                            let sq = frac * frac;
+                            let x3 = sq + x1 + x;
+
+                            let prod = frac * (x1 + x3);
+                            let y3 = prod + y1 + self.c;
+
+                            Point::Point { x: x3, y: y3 }
+                        }
+                    }
+                }
             }
         }
     }
